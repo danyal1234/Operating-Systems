@@ -1,0 +1,26 @@
+Name: Danyal Mahmood
+ID: 0956989
+
+Experiment 1. Thread and Process Creation
+
+Q1)
+Ans: 
+The fork command takes a singnificant longer amount of time to create a new process compare to thr_create, ususally by about 115 microseconds when running the two programs. This is since the fork command creates a child process which requires the copy of the parent processes code and memory which takes a certain amount of time. However, in thr_create creates a new threads which shares the same memory and resources so there is no copying of programs or stuff stored in memory. The new thread created will get the essentials created for it such as its own registers and stack but will use to the same resources as the rest of the threads which is called multithreading, which makes it significantly faster to create compared to making a new process. 
+
+Experiment 2. Process Management 
+
+Q2)
+Ans:
+The word hello is printed to the screen 11 times. This indicates that 4 different processes were created including the parent process, four of the hellos were printed from the parent process and the three child processes created by fork by the program created printed hello a total of two times each. This can be noted by using process id's, since there are four unique id's with the first print's id being the parent process.  
+
+Experiment 3. Processes vs Threads
+
+Q3)
+Ans:
+The two different programs differentiate who resources are shared in threads compared to how they are shared in processes, in this case both parent and child processes/threads share the resource shared_number. When the parent process increases the shared number by a factor of two, the child process still shows that the shared_number is the original value. This is due to when fork() is called it duplicates all the resources of the parent process, which includes the variable shared_number. This means that when the shared_number resource is increased in the parent process since the child has its own copy of it no changes will take place to it. Since in multithreading the resources are shared between multiple threads, it explains that when the parent thread increases the child thread by factor of two, the child threads also displays that the shared_number has increased even though the child thread does not manipulate the resource.
+
+Experiment 4. The Counting Problem
+
+Q4)
+Ans:
+The program is not behaving correctly since the counter falls well short of 2*NITER which would be expected by how many times each thread should run and increment the variable cnt. The count is usually just slightly above 1*NITER. This due to the fact in multithreading the threads run concurrently and if the threads are accessing the same resources issue can occur, in this case not increasing the cnt the correct number of times. Therefore, to solve this problem the thread must have synchronized access through prefereably blocking access to the variable cnt to avoid copying the wrong value to temp which will result with the cnt variable being out of synch when it is updated with temp being increased.
