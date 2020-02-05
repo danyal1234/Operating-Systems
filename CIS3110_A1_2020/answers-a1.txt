@@ -5,13 +5,13 @@ Experiment 1. Thread and Process Creation
 
 Q1)
 Ans: 
-The fork command takes a singnificant longer amount of time to create a new process compare to thr_create, ususally by about 115 microseconds when running the two programs. This is since the fork command creates a child process which requires the copy of the parent processes code and memory which takes a certain amount of time. However, in thr_create creates a new threads which shares the same memory and resources so there is no copying of programs or stuff stored in memory. The new thread created will get the essentials created for it such as its own registers and stack but will use to the same resources as the rest of the threads which is called multithreading, which makes it significantly faster to create compared to making a new process. 
+The fork command takes a significant longer amount of time to create a new process compare to thr_create, usually by about 50 microseconds when running the two programs. This is since the fork command creates a child process which requires the copy of the parent processes code and memory which takes a certain amount of time. However, in thr_create creates a new threads which shares the same memory and resources so there is no copying of programs or stuff stored in memory. The new thread created will get the essentials created for it such as its own registers and stack but will use to the same resources as the rest of the threads which is called multithreading, which makes it significantly faster to create compared to making a new process. 
 
 Experiment 2. Process Management 
 
 Q2)
 Ans:
-The word hello is printed to the screen 11 times. This indicates that 4 different processes were created including the parent process, four of the hellos were printed from the parent process and the three child processes created by fork by the program created printed hello a total of two times each. This can be noted by using process id's, since there are four unique id's with the first print's id being the parent process.  
+The word hello is printed to the screen 11 times. This indicates that 4 different processes were created including the parent process, four of the hellos were printed from the parent process and the three child processes created by fork by the program created printed hello a total of seven times. This can be noted by using process id's, since there are four unique id's with the first print's id being the parent process.  
 
 Experiment 3. Processes vs Threads
 
