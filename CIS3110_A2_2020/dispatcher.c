@@ -29,7 +29,6 @@ typedef struct process{
     int blockedCount;
     int run_time;
     int finishedCount;
-    int exchangeTimes[20];
     int runningtime;
 } Process;
 
@@ -51,16 +50,21 @@ void printNode(void* data){
 void deleteListNode(void *data){
 }
 
-int checkBlockedTimes(int pid, int count, int ids[], int times[]) {
+int checkBlockedTimes(int pid, int count, int ids[], int times[], int blockedCount) {
     if (pid == 0)
     {
         return -1;
     }
 
+    int blockcount = 0;
+
     for (int i = 0; i < count; ++i) {
         if (ids[i] == pid) {
-            ids[i] = 0;
-            return times[i];
+            if (blockcount == blockedCount) {
+                return times[i];
+            } else {
+                blockcount++;
+            }
         }
     }
 
@@ -123,12 +127,27 @@ void dispatcher(FILE *fd, int harddrive){
             token = strtok(NULL, " ");
         }
 
-       printf("Process %3d wants to start at %6dms and run for %6dms and has %3d hard drive exchanges\n",  process_id, start_time, run_time, num_exchanges);  
        queueInsert(newQueue, &processes[processCounter], processes[processCounter].start_time);
        processCounter++;  
     }
 
     while(1) {
+        int blockedCheck = checkBlockedTimes(cpu.process->pid, totalblocktimes, pidblockid, pidblocktime, cpu.process->blockedCount);
+        if (blockedCheck != -1 && blockedCheck == cpu.process->runningtime) {
+            cpu.process->blockedCount++;
+            cpu.process->blockedstart = cpu.time;
+            queueInsert(blockedQueue, cpu.process, blockedCount);
+            blockedCount++;
+
+            if (queueisEmpty(readyQueue) != 0) {
+                cpu.process = (Process*)queuePeak(readyQueue);
+                cpu.process->readytotal += cpu.time - cpu.process->readystart;
+                queuePop(readyQueue);
+            } else {
+                cpu.process = &zeroProcess;
+            }
+        }
+
         while(1) {
             if (queueisEmpty(newQueue) == 0) {
                 break;
@@ -138,12 +157,15 @@ void dispatcher(FILE *fd, int harddrive){
             if (peakProcess && peakProcess->start_time == cpu.time) {
                 queuePop(newQueue);
 
-                int remainingtime = peakProcess->run_time - peakProcess->runningtime;
+                int currentRemainingTime = cpu.process->run_time - cpu.process->runningtime;
 
-                if (remainingtime > peakProcess->run_time) {
-                    cpu.process->readystart = cpu.time;
-                    queueInsert(readyQueue, cpu.process, remainingtime);
-                    cpu.process = peakProcess;
+                if (cpu.process->pid == 0 || peakProcess->run_time < currentRemainingTime) {
+                    if (cpu.process->pid != 0)
+                    {
+                        cpu.process->readystart = cpu.time;
+                        queueInsert(readyQueue, cpu.process, currentRemainingTime);
+                    }
+                    cpu.process = peakProcess;    
                 } else {
                     peakProcess->readystart = cpu.time;
                     queueInsert(readyQueue, peakProcess, peakProcess->run_time);
@@ -159,8 +181,17 @@ void dispatcher(FILE *fd, int harddrive){
             cpu.process->readytotal += cpu.time - cpu.process->readystart;
             queuePop(readyQueue);
         } else if (cpu.process->pid != 0 && cpu.process->run_time == cpu.process->runningtime) {
-            finishedRunning++;
-            cpu.process->finishedCount = finishedRunning;
+            if (checkBlockedTimes(cpu.process->pid, totalblocktimes, pidblockid, pidblocktime, cpu.process->blockedCount) != cpu.process->run_time)
+            {
+                finishedRunning++;
+                cpu.process->finishedCount = finishedRunning;
+            } else {
+                cpu.process->blockedCount++;
+                cpu.process->blockedstart = cpu.time;
+                queueInsert(blockedQueue, cpu.process, blockedCount);
+                blockedCount++;
+            }
+
             if (queueisEmpty(readyQueue) == 0)
             {
                 cpu.process = &zeroProcess;
@@ -171,35 +202,23 @@ void dispatcher(FILE *fd, int harddrive){
             }
         }
 
-        int blockedCheck = checkBlockedTimes(cpu.process->pid, totalblocktimes, pidblockid, pidblocktime);
-        if (blockedCheck != -1 && blockedCheck <= cpu.time) {
-            cpu.process->blockedstart = cpu.time;
-            queueInsert(blockedQueue, cpu.process, blockedCount);
-            blockedCount++;
-            cpu.process->blockedCount++;
-
-            if (queueisEmpty(readyQueue) != 0) {
-                cpu.process = (Process*)queuePeak(readyQueue);
-                cpu.process->readytotal += cpu.time - cpu.process->readystart;
-                queuePop(readyQueue);
-            } else {
-                cpu.process = &zeroProcess;
-            }
-        }
-
         if (hddrunning) {
             hdd.time--;
             if (hdd.time == 0) {
-                if (cpu.process->pid == 0)
-                {
+                if (hdd.process->run_time == hdd.process->runningtime) {
+                    finishedRunning++;
+                    hdd.process->finishedCount = finishedRunning;
+                } else if (cpu.process->pid == 0) {
                     cpu.process = hdd.process;
                 } else {
                     int remainingtime = hdd.process->run_time - hdd.process->runningtime;
                     int currentrunningtime = cpu.process->run_time - cpu.process->runningtime;
                     if (remainingtime < currentrunningtime) {
+                        cpu.process->readystart = cpu.time;
                         queueInsert(readyQueue, cpu.process, currentrunningtime);
                         cpu.process = hdd.process;
                     } else {
+                        hdd.process->readystart = cpu.time;
                         queueInsert(readyQueue, hdd.process, remainingtime);
                     }
                 }
@@ -210,26 +229,26 @@ void dispatcher(FILE *fd, int harddrive){
                     hddrunning = false;
                 } else {
                     hdd.process = (Process*)queuePeak(blockedQueue);
-                    hdd.process->blockedtotal += cpu.time - hdd.process->blockedstart;
+                    hdd.process->blockedtotal += cpu.time - hdd.process->blockedstart + harddrive;
                     queuePop(blockedQueue);
                 }
             }
         } else {
             if (queueisEmpty(blockedQueue) != 0) {
                 hdd.process = (Process*)queuePeak(blockedQueue);
-                hdd.process->blockedtotal += cpu.time - hdd.process->blockedstart;
+                hdd.process->blockedtotal += cpu.time - hdd.process->blockedstart + harddrive;
                 hddrunning = true;
                 queuePop(blockedQueue);
             }
         }
 
-        printQueue(blockedQueue);
         if (queueisEmpty(newQueue) == 0 && queueisEmpty(blockedQueue) == 0 && queueisEmpty(readyQueue) == 0 && cpu.process->pid == 0 && !hddrunning) {
             break;
         }
 
-        cpu.process->runningtime += 100;
-        cpu.time +=  100;
+        cpu.process->runningtime++;
+        cpu.time++;
+
     }
 
     printf("0 %d\n", zeroProcess.runningtime);
@@ -241,5 +260,7 @@ void dispatcher(FILE *fd, int harddrive){
             }
         }
     }
+
+    free(processes);
 
 }
