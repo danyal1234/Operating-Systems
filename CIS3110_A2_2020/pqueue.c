@@ -3,6 +3,8 @@
 #include "PriorityQueueAPI.h"
 #include "LinkedListAPI.h"
 
+// Code taken from work done in previous course CIS2520 F17
+
 Queue *queueCreate(void (*printFunction)(void *toBePrinted), void (*deleteFunction)(void *toBeDeleted))
 {
     Queue *queue = malloc(sizeof(Queue));
@@ -22,6 +24,7 @@ void queueDestroy(Queue *queue)
     }
 
     deleteList(queue->list);
+    free(queue->list);
     free(queue);
 }
 

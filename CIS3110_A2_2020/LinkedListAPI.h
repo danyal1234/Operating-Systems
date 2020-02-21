@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Code taken from work done in previous course CIS2520 F17
+
 /**
 *Node of a linked list. This list is doubly linked, meaning that it has points to both the node immediately in front 
 of it, as well as the node immediately behind it.

@@ -3,6 +3,8 @@
 
 #include "LinkedListAPI.h"
 
+// Code taken from work done in previous course CIS2520 F17
+
 /**
  * The basis of the queue 
  * Uses a backing linkedlist to create queue aswell as a member that holds queue length

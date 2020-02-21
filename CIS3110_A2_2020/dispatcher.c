@@ -132,6 +132,7 @@ void dispatcher(FILE *fd, int harddrive){
     }
 
     while(1) {
+        // check to see if any processes are requesting hdd exchange
         int blockedCheck = checkBlockedTimes(cpu.process->pid, totalblocktimes, pidblockid, pidblocktime, cpu.process->blockedCount);
         if (blockedCheck != -1 && blockedCheck == cpu.process->runningtime) {
             cpu.process->blockedCount++;
@@ -148,6 +149,7 @@ void dispatcher(FILE *fd, int harddrive){
             }
         }
 
+        // check to see if any new proccesses have arrived
         while(1) {
             if (queueisEmpty(newQueue) == 0) {
                 break;
@@ -159,8 +161,7 @@ void dispatcher(FILE *fd, int harddrive){
 
                 int currentRemainingTime = cpu.process->run_time - cpu.process->runningtime;
                 if (cpu.process->pid == 0 || peakProcess->run_time < currentRemainingTime) {
-                    if (cpu.process->pid != 0)
-                    {
+                    if (cpu.process->pid != 0) {
                         cpu.process->readystart = cpu.time;
                         queueInsert(readyQueue, cpu.process, currentRemainingTime);
                     }
@@ -174,7 +175,7 @@ void dispatcher(FILE *fd, int harddrive){
             }
         }
 
-
+        // check to see if process finished running, or any new processes to run if 0 process running
         if (cpu.process->pid == 0 && queueisEmpty(readyQueue) != 0) {
             cpu.process = (Process*)queuePeak(readyQueue);
             cpu.process->readytotal += cpu.time - cpu.process->readystart;
@@ -199,8 +200,11 @@ void dispatcher(FILE *fd, int harddrive){
             }
         }
 
+        // hard drive process
         if (hddrunning) {
             hdd.time--;
+
+            // if hard drive done running, assign new task to task if blocked and update cpu process
             if (hdd.time == 0) {
                 if (hdd.process->run_time == hdd.process->runningtime) {
                     finishedRunning++;
@@ -239,6 +243,7 @@ void dispatcher(FILE *fd, int harddrive){
             }
         }
 
+        // finished processing
         if (queueisEmpty(newQueue) == 0 && queueisEmpty(blockedQueue) == 0 && queueisEmpty(readyQueue) == 0 && cpu.process->pid == 0 && !hddrunning) {
             break;
         }
@@ -247,6 +252,7 @@ void dispatcher(FILE *fd, int harddrive){
         cpu.time++;
     }
 
+    // print results
     printf("0 %d\n", zeroProcess.runningtime);
 
     for (int j = 0; j < processCounter; ++j) {

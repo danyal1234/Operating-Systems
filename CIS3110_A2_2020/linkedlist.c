@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "LinkedListAPI.h"
 
+// Code taken from work done in previous course CIS2520 F17
+
 int compare(const void *first, const void *second) {
     int i1 = ((Node *) first)->priority;
     int i2 = ((Node *) second)->priority;
@@ -166,18 +168,24 @@ int deleteNodeFromList(List *list, void *toBeDeleted) {
             if(a->next->next == NULL && a->next->previous == NULL) {
                 list->head = NULL;
                 list->tail = NULL;
+                free(a->next);
+                free(a);
             }
             
             else if(a->next->previous == NULL) {
                 list->head = a->next->next;
                 a->next->next = NULL;
                 list->head->previous = NULL;
+                free(a->next);
+                free(a);
             }
      
             else if(a->next->next == NULL) {
                 list->tail = a->next->previous;
                 a->next->previous = NULL;
                 list->tail->next = NULL;
+                free(a->next);
+                free(a);
             }
      
             else {
@@ -185,6 +193,8 @@ int deleteNodeFromList(List *list, void *toBeDeleted) {
                 a->next->next->previous = a->next->previous;
                 a->next->next = NULL;
                 a->next->previous = NULL;
+                free(a->next);
+                free(a);
             }
         }
         
@@ -250,3 +260,4 @@ void printBackwards(List *list) {
         a = a->previous;
     }
 }
+
