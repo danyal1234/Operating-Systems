@@ -11,7 +11,7 @@ typedef struct tlbentry {
  
 int main(int argc, char **argv) {
 	int physicalMemCounter = 0;
-	int pageTable[255];
+	int pageTable[256];
 	bool pageSet[255];
 	int physicalMem[255*255];
 	int address = 0;
@@ -25,6 +25,7 @@ int main(int argc, char **argv) {
 	// create TLB
 	TLBentry tlbEntries[16];
 
+	// initialize pageset values
 	for (int i = 0; i <= 255; ++i) {
 		pageSet[i] = false;
 	}
