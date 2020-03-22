@@ -40,8 +40,9 @@ int main(int argc, char **argv) {
 	if (!inFile) {
 		fprintf(stderr, "usage: %s filenameoflogicaladdresses\n", argv[0]);
  		exit(EXIT_FAILURE);
-	} else if () {
-
+	} else if (argv[1] == NULL) {
+		fprintf(stderr, "usage: %s nologicaladdressesfileprovided\n", argv[0]);
+ 		exit(EXIT_FAILURE);
 	} else if (!backingStore) {
 		fprintf(stderr, "usage: %s noinstanceofbackingstore\n", argv[0]);
  		exit(EXIT_FAILURE);
