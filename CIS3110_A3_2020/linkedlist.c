@@ -203,9 +203,9 @@ int deleteNodeFromList(List *list, void *toBeDeleted) {
             return -1;
         }
 
-        }
-    
-	       return EXIT_SUCCESS;
+    }
+
+   return EXIT_SUCCESS;
 
 }
 

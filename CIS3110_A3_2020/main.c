@@ -12,7 +12,6 @@ void printNode(void* data){
 }
 
 void deleteListNode(void *data){
-	free((TLBentry*)data);
 }
 
 int compareNode(const void *first,const void *second) {
@@ -27,10 +26,10 @@ int main(int argc, char **argv) {
 	int address = 0;
 	int total = 0;
 	int tlbHit = 0;
-	int tblCounter = 0;
+	int tlbCounter = 0;
 	int totalPageFaults = 0;
 	char fromMem[256] = "";
-	bool tblFound = false;
+	bool tlbFound = false;
 
 	int offset;
 	int first16bit;
@@ -38,44 +37,55 @@ int main(int argc, char **argv) {
 
 	int correlatedFrame;
 
+	// open necessary files
 	FILE* inFile = fopen(argv[1], "r");
 	FILE* backingStore = fopen("BACKING_STORE.bin", "rb");
-	List* TBL = initializeList(&printNode, &deleteListNode, &compareNode);
+	List* TLB = initializeList(&printNode, &deleteListNode, &compareNode);
 
+	// error check for bad arguments
 	if (!inFile) {
 		fprintf(stderr, "usage: %s filenameoflogicaladdresses\n", argv[0]);
  		exit(EXIT_FAILURE);
 	} else if (!backingStore) {
-		fprintf(stderr, "usage: %s filenameofbackingstore\n", argv[0]);
+		fprintf(stderr, "usage: %s noinstanceofbackingstore\n", argv[0]);
  		exit(EXIT_FAILURE);
 	}
 
 	while(fscanf(inFile,"%d", &address)>0) {
 		total++;
 
+		// take first 8 bits of address
 		offset = address & 0xFF;
+		// take first 8 bits of the 16 bits of adress
 		first16bit = address & 0xFF00;
+		// shift right to remove 8 0's
 		pagenumb = first16bit>>8;
-		tblFound = false;
+		tlbFound = false;
 
+		// check if page number exists in TLB
 		if (pageSet[pagenumb] == true) {
-			Node* currentNode = TBL->head;
+			Node* currentNode = TLB->head;
+
 			while(currentNode != NULL) {
 				if (((TLBentry*)(currentNode->data))->page == pagenumb) {
+					// if TLB hit use correlated frame and print value
 					correlatedFrame = ((TLBentry*)(currentNode->data))->frame;
 					printf("Virtual address: %d Physical address: %d Value: %d\n", address, correlatedFrame*256+offset, physicalMem[correlatedFrame*256+offset]);
-					tblFound = true;
+					tlbFound = true;
 					tlbHit++;
 					break;
 				}
+
 				currentNode = currentNode->next;
 			}
 		}
 
-		if (tblFound == true) {
+		// if TLB hit continue to next address
+		if (tlbFound == true) {
 			continue;
 		}
 
+		//if page fault then acccess backing store for 256 byte values
 		if (pageSet[pagenumb] == false) {
 			pageSet[pagenumb] = true;
 			totalPageFaults++;
@@ -88,20 +98,24 @@ int main(int argc, char **argv) {
 			physicalMemCounter++;
 		}
 
-		if (tblCounter == 16) {
-			deleteNodeFromList(TBL, getFromFront(TBL));
-			tblCounter--;
+		// if TLB length is 16 remove first item in list
+		if (tlbCounter == 16) {
+			deleteNodeFromList(TLB, getFromFront(TLB));
+			tlbCounter--;
 		}
 
-		TLBentry* insertEntry = malloc(sizeof(TLBentry));
-		insertEntry->page = pagenumb;
-		insertEntry->frame = pageTable[pagenumb];
-		insertSorted(TBL, insertEntry, 0);
-		tblCounter++;
+		// insert recently accessed page number into TLB
+		TLBentry insertEntry;
+		insertEntry.page = pagenumb;
+		insertEntry.frame = pageTable[pagenumb];
+		insertSorted(TLB, &insertEntry, 0);
+		tlbCounter++;
 
+		// if TLB hit use correlated frame and print value
 		printf("Virtual address: %d Physical address: %d Value: %d\n", address, pageTable[pagenumb]*256+offset, physicalMem[pageTable[pagenumb]*256+offset]);
 	}
 
+	// print statistics
 	printf("Number of Translated Addresses = %d\n", total);
 	printf("Page Faults = %d\n", totalPageFaults);
 	printf("Page Fault Rate = %.3f\n", (double)totalPageFaults/(double)total);
@@ -110,5 +124,5 @@ int main(int argc, char **argv) {
 
 	fclose(inFile);
 	fclose(backingStore);
-	deleteList(TBL);
+	deleteList(TLB);
 }
