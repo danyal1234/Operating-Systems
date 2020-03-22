@@ -1,23 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include "LinkedListAPI.h"
+#include <stdlib.h>
 
+// entries insde the TLB struct
 typedef struct tlbentry {
     int page;
     int frame;
 } TLBentry;
-
-void printNode(void* data){
-}
-
-void deleteListNode(void *data){
-	free((TLBentry*)data);
-}
-
-int compareNode(const void *first,const void *second) {
-	return 0;
-}
  
 int main(int argc, char **argv) {
 	int physicalMemCounter = 0;
@@ -32,6 +22,10 @@ int main(int argc, char **argv) {
 	char fromMem[256] = "";
 	bool tlbFound = false;
 
+	// create TLB
+	TLBentry tlbEntries[16];
+
+	// variables for bitmasking
 	int offset;
 	int first16bit;
 	int pagenumb;
@@ -41,12 +35,13 @@ int main(int argc, char **argv) {
 	// open necessary files
 	FILE* inFile = fopen(argv[1], "r");
 	FILE* backingStore = fopen("BACKING_STORE.bin", "rb");
-	List* TLB = initializeList(&printNode, &deleteListNode, &compareNode);
 
 	// error check for bad arguments
 	if (!inFile) {
 		fprintf(stderr, "usage: %s filenameoflogicaladdresses\n", argv[0]);
  		exit(EXIT_FAILURE);
+	} else if () {
+
 	} else if (!backingStore) {
 		fprintf(stderr, "usage: %s noinstanceofbackingstore\n", argv[0]);
  		exit(EXIT_FAILURE);
@@ -65,19 +60,14 @@ int main(int argc, char **argv) {
 
 		// check if page number exists in TLB
 		if (pageSet[pagenumb] == true) {
-			Node* currentNode = TLB->head;
-
-			while(currentNode != NULL) {
-				if (((TLBentry*)(currentNode->data))->page == pagenumb) {
-					// if TLB hit use correlated frame and print value
-					correlatedFrame = ((TLBentry*)(currentNode->data))->frame;
+			for (int i = 0; i < tlbCounter; ++i) {
+				if (tlbEntries[i].page == pagenumb) {
+					correlatedFrame = tlbEntries[i].frame;
 					printf("Virtual address: %d Physical address: %d Value: %d\n", address, correlatedFrame*256+offset, physicalMem[correlatedFrame*256+offset]);
 					tlbFound = true;
 					tlbHit++;
 					break;
 				}
-
-				currentNode = currentNode->next;
 			}
 		}
 
@@ -101,15 +91,16 @@ int main(int argc, char **argv) {
 
 		// if TLB length is 16 remove first item in list
 		if (tlbCounter == 16) {
-			deleteNodeFromList(TLB, getFromFront(TLB));
+			for (int i = 1; i < tlbCounter; ++i) {
+				tlbEntries[i-1].page = tlbEntries[i].page;
+				tlbEntries[i-1].frame = tlbEntries[i].frame;
+			}
 			tlbCounter--;
 		}
 
 		// insert recently accessed page number into TLB
-		TLBentry* insertEntry = (TLBentry*)malloc(sizeof(TLBentry));
-		insertEntry->page = pagenumb;
-		insertEntry->frame = pageTable[pagenumb];
-		insertSorted(TLB, insertEntry, 0);
+		tlbEntries[tlbCounter].page = pagenumb;
+		tlbEntries[tlbCounter].frame = pageTable[pagenumb];
 		tlbCounter++;
 
 		// if TLB hit use correlated frame and print value
@@ -125,5 +116,5 @@ int main(int argc, char **argv) {
 
 	fclose(inFile);
 	fclose(backingStore);
-	deleteList(TLB);
+ 	exit(EXIT_SUCCESS);
 }
