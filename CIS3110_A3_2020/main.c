@@ -12,6 +12,7 @@ void printNode(void* data){
 }
 
 void deleteListNode(void *data){
+	free((TLBentry*)data);
 }
 
 int compareNode(const void *first,const void *second) {
@@ -105,10 +106,10 @@ int main(int argc, char **argv) {
 		}
 
 		// insert recently accessed page number into TLB
-		TLBentry insertEntry;
-		insertEntry.page = pagenumb;
-		insertEntry.frame = pageTable[pagenumb];
-		insertSorted(TLB, &insertEntry, 0);
+		TLBentry* insertEntry = (TLBentry*)malloc(sizeof(TLBentry));
+		insertEntry->page = pagenumb;
+		insertEntry->frame = pageTable[pagenumb];
+		insertSorted(TLB, insertEntry, 0);
 		tlbCounter++;
 
 		// if TLB hit use correlated frame and print value
