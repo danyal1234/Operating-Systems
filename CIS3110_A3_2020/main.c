@@ -25,6 +25,10 @@ int main(int argc, char **argv) {
 	// create TLB
 	TLBentry tlbEntries[16];
 
+	for (int i = 0; i <= 255; ++i) {
+		pageSet[i] = false;
+	}
+
 	// variables for bitmasking
 	int offset;
 	int first16bit;
