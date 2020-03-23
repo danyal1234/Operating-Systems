@@ -1,13 +1,14 @@
+/*
+main.c
+Student Name : Danyal Mahmood
+Student ID # : 0956989
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
-
-// entries insde the TLB struct
-typedef struct tlbentry {
-    int page;
-    int frame;
-} TLBentry;
+#include "functions.h"
  
 int main(int argc, char **argv) {
 	int physicalMemCounter = 0;
@@ -53,6 +54,7 @@ int main(int argc, char **argv) {
  		exit(EXIT_FAILURE);
 	}
 
+	// translate virtual adresses
 	while(fscanf(inFile,"%d", &address)>0) {
 		total++;
 
@@ -113,12 +115,7 @@ int main(int argc, char **argv) {
 		printf("Virtual address: %d Physical address: %d Value: %d\n", address, pageTable[pagenumb]*256+offset, physicalMem[pageTable[pagenumb]*256+offset]);
 	}
 
-	// print statistics
-	printf("Number of Translated Addresses = %d\n", total);
-	printf("Page Faults = %d\n", totalPageFaults);
-	printf("Page Fault Rate = %.3f\n", (double)totalPageFaults/(double)total);
-	printf("TLB Hits = %d\n", tlbHit);
-	printf("TLB Hit Rate = %.3f\n", (double)tlbHit/(double)total);
+	printStatistics(total, totalPageFaults, tlbHit);
 
 	fclose(inFile);
 	fclose(backingStore);

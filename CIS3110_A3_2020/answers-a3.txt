@@ -1,3 +1,9 @@
+/*
+answers-a3.txt
+Student Name : Danyal Mahmood
+Student ID # : 0956989
+*/
+
 1)a) 3085 to bits = 110000001101
      offset = 0000001101 = 13
      page number = 11 = 3
@@ -23,6 +29,7 @@
 
 3) 
 For frames 1,2,3,4,5,6,7
-LIRU       20,18,15,10,8,7,7
-FIFO       20,18,16,14,10,10,7
-Optimal    20,15,11,8,7,7,7
+
+LRU        20,18,15,10,8,7,7 (Least recently used page gets replaced.)
+FIFO       20,18,16,14,10,10,7 (First page in is first page out, similar to queue.)
+Optimal    20,15,11,8,7,7,7 (Page that will not be used for largest period of time is replaced.)
