@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// global variables
 int NITER;
-
 int cnt = 0;
 sem_t mutex;
 
@@ -13,11 +13,13 @@ void * Count(void * a)
     int i, tmp;
     for(i = 0; i < NITER; i++)
     {
+    	// wait for access to resource cnt by obtainting semaphore
 		sem_wait (&mutex);
         tmp = cnt;      /* copy the global cnt locally */
         tmp = tmp+1;    /* increment the local copy */
         cnt = tmp;      /* store the local value into the global cnt */ 
 		sem_post (&mutex); 
+		// releast semaphore when done with resource cnt
     }
 }
 
@@ -32,12 +34,26 @@ int main(int argc, char * argv[])
 	// Including the number of times that each thread increments
 	// the shared count cnt
 	// For example, NITER = 20000;
-	sem_init(&mutex, 0, 1);
-	NITER = atoi(argv[1]);
 
 	// error check for bad arguments
 	if (argv[1] == NULL) {
 		fprintf(stderr, "usage: %s nonumberofiterationsprovided\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	if (argc != 2) {
+		fprintf(stderr, "usage: %s wrongnumberofarguments\n", argv[0]);
+ 		exit(EXIT_FAILURE);
+	}
+
+	// create semaphore
+	sem_init(&mutex, 0, 1);
+	// determine user entered number of iterations
+	NITER = atoi(argv[1]);
+
+	// check if negative number of counters
+	if (NITER < 0) {
+		fprintf(stderr, "usage: %s negativenumberofiterations\n", argv[0]);
  		exit(EXIT_FAILURE);
 	}
 
@@ -50,27 +66,27 @@ int main(int argc, char * argv[])
 	// creating Thread 1
 	if(pthread_create(&tid1, NULL, Count, NULL))
 	{
-		printf("\n ERROR creating thread 1");
-		exit(1);
+		fprintf(stderr, "usage: %s failurecreatethread1\n", argv[0]);
+		exit(EXIT_FAILURE);
 	}
 
 	// creating Thread 2
 	if(pthread_create(&tid2, NULL, Count, NULL))
 	{
-		printf("\n ERROR creating thread 2");
-		exit(1);
+		fprintf(stderr, "usage: %s failurecreatethread2\n", argv[0]);
+		exit(EXIT_FAILURE);
 	}
 
 	if(pthread_join(tid1, NULL))	/* wait for the thread 1 to finish */
 	{
-		printf("\n ERROR joining thread");
-		exit(1);
+		fprintf(stderr, "usage: %s failurejointhread1\n", argv[0]);
+		exit(EXIT_FAILURE);
 	}
 
 	if(pthread_join(tid2, NULL))        /* wait for the thread 2 to finish */
 	{
-		printf("\n ERROR joining thread");
-		exit(1);
+		fprintf(stderr, "usage: %s failurejointhread2\n", argv[0]);
+		exit(EXIT_FAILURE);
 	}
 
 
@@ -83,6 +99,15 @@ int main(int argc, char * argv[])
 		printf("\nFAIL\n");
 // End of code section
 
+	if (cnt != 2 * NITER) {
+		fprintf(stderr, "usage: %s numberofincrementsincorrect\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	// free semaphore
+	sem_destroy(mutex);
+
 	pthread_exit(NULL);
+ 	exit(EXIT_SUCCESS);
 }
 
