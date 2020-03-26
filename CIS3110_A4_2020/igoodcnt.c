@@ -99,13 +99,8 @@ int main(int argc, char * argv[])
 		printf("\nFAIL\n");
 // End of code section
 
-	if (cnt != 2 * NITER) {
-		fprintf(stderr, "usage: %s numberofincrementsincorrect\n", argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
 	// free semaphore
-	sem_destroy(mutex);
+	sem_destroy(&mutex);
 
 	pthread_exit(NULL);
  	exit(EXIT_SUCCESS);
